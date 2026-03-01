@@ -1,20 +1,15 @@
 package chess;
 
-public class Queen extends Piece {
-    //inherits color from Piece
-    public Queen(Chess.Player color) {
+public class Rook extends Piece {
+    public boolean hasMoved = false; // for castling
+    
+    public Rook(Chess.Player color) {
         super(color);
     }
 
     public boolean validMove(Board board, int startRow, int startCol, int endRow, int endCol) {
-        int rowDiff = Math.abs(endRow - startRow);
-        int colDiff = Math.abs(endCol - startCol);
-        
-        // Queen moves like rook (straight) or bishop (diagonal)
-        boolean isStraight = (startRow == endRow || startCol == endCol);
-        boolean isDiagonal = (rowDiff == colDiff && rowDiff > 0);
-        
-        if (!isStraight && !isDiagonal) {
+        // Must move in straight line (same row or same column)
+        if (startRow != endRow && startCol != endCol) {
             return false;
         }
         
@@ -36,5 +31,4 @@ public class Queen extends Piece {
         // End square must be empty or enemy
         return board.checkEmpty(endRow, endCol) || board.checkEnemy(endRow, endCol, color);
     }
-
 }
