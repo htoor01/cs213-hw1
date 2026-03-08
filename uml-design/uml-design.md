@@ -154,8 +154,12 @@ Represents a single message posted by a user.
 |----------------|-------|
 | `ArrayList<Forum> forums` | Website |
 | `ArrayList<User> registeredUsers` | Website |
+| `ArrayList<Forum> joinedForums` | User |
+| `ArrayList<Invitation> sentInvitations` | User |
+| `ArrayList<Invitation> receivedInvitations` | User |
 | `ArrayList<User> members` | Forum |
 | `ArrayList<Thread> threads` | Forum |
+| `ArrayList<Message> pendingMessages` | Forum | 
 | `ArrayList<Message> messages` | Thread |
 
 ---
