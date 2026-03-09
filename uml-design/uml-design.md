@@ -16,6 +16,9 @@ classDiagram
         -String userId
         -String name
         -String email
+        -ArrayList~Forum~ joinedForums
+        -ArrayList~Invitation~ sentInvitations
+        -ArrayList~Invitation~ receivedInvitations
         +createForum(String name, String description) Forum
         +joinForum(Forum f) boolean
         +getName() String
@@ -29,16 +32,38 @@ classDiagram
         -String description
         -User owner
         -User moderator
+
         -ArrayList~User~ members
         -ArrayList~Thread~ threads
+        -ArrayList~Message~ pendingMessages
+
         +addMember(User u) boolean
         +removeMember(User u) boolean
         +createThread(String subject, String content, User author) Thread
         +postMessage(Message m) boolean
+        
+        +filterMessagesByAuthor(User author) ArrayList~Message~
+        +filterMessagesByThread(Thread thread) ArrayList~Message~
+        +filterMessagesByDate(Date date) ArrayList~Message~
+        +filterMessagesByDateRange(Date start, Date end) ArrayList~Message~
+        
+        +sortMessagesByAuthor(ArrayList~Message~ msgs) ArrayList~Message~
+        +sortMessagesByDate(ArrayList~Message~ msgs, boolean ascending) ArrayList~Message~
+        +reviewMessage(Message m) void
+        +approveMessage(Message m) boolean
+        +denyMessage(Message m) boolean
+        +resign() void
+        
+        +inviteUser(User u) Invitation
+        +inviteModerator(User member) Invitation
+        +inviteNewOwner(User member) Invitation
+        
+        +deleteForum() void
+
+        +setOwner(User u) boolean
+        +setModerator(User u) boolean
         +getOwner() User
         +getModerator() User
-        +setModerator(User u) boolean
-        +setOwner(User u) boolean
         +getMembers() ArrayList~User~
         +getThreads() ArrayList~Thread~
     }
@@ -70,17 +95,35 @@ classDiagram
         +isApproved() boolean
     }
 
-    %% Relationships
+    class Invitation {
+        -String invitationId
+        -String type
+        -User sender
+        -User recipient
+        -String status
+        -Forum forum
+        +accept() void
+        +reject() void
+        +getSender() User
+        +getRecipient() User
+        +getStatus() String
+        +getForum() Forum
+    }
+
+
     Website "1" --o "0..*" Forum : hosts
     Website "1" --o "0..*" User : manages
     User "1" -- "0..*" Forum : memberOf
     Forum "1" -- "1" User : owner
     Forum "1" -- "1" User : moderator
-    Forum "1" --o "0..*" Thread : contains
-    Thread "1" --o "1..*" Message : contains
+    Forum "1" *-- "0..*" Thread : contains
+    Thread "1" *-- "1..*" Message : contains
     Message "1" -- "1" User : author
     Message "1" -- "1" Thread : belongsTo
     Thread "1" -- "1" Forum : belongsTo
+    User "1" -- "0..*" Invitation : sends
+    User "1" -- "0..*" Invitation : receives
+    Forum "1" -- "0..*" Invitation : relatedTo
 ```
 
 ## Class Descriptions
@@ -101,9 +144,15 @@ Represents a registered user on the website.
   - `userId`: Unique identifier for the user
   - `name`: User's name
   - `email`: User's email address
+  - `joinedForums`: List of forums user is member of
+  - `sentInvitations`: List of invitations user has sent
+  - `receivedIntivations`: List of invitaitons user has received
 - **Methods:**
   - `createForum()`: Creates a new forum (user becomes owner and first member)
   - `joinForum()`: Joins an existing forum as a member
+  - `getName()`: Retrieves user's name
+  - `getEmail()`: Retrieves user's email
+  - `getUserId()`: Retrieves user's identifier
 
 ### Forum
 Represents a discussion forum with members, threads, and messages.
@@ -115,13 +164,33 @@ Represents a discussion forum with members, threads, and messages.
   - `moderator`: The user who moderates the forum
   - `members`: List of forum members
   - `threads`: List of discussion threads
+  - `pendingMessages`: List of messages waiting for approval
 - **Methods:**
   - `addMember()`: Adds a new member to the forum
   - `removeMember()`: Removes a member from the forum (used when member leaves)
   - `createThread()`: Creates a new discussion thread
   - `postMessage()`: Posts a message to the forum
+  - `filterMessagesByAuthor()`: Returns messages by specific author
+  - `filterMessagesByThread()`: Returns messages in specific thread
+  - `filterMessagesByDate()`: Returns messages on specific date
+  - `filterMessagesByDateRange()`: Returns messages within date range
+  - `sortMessagesByAuthor()`: Sort messages alphabetically by author name
+  - `sortMessagesByDate()`: Sort messages chronologically
+  - `reviewMessage()`: Review pending message
+  - `approveMessage()`: Pass message through to forum
+  - `denyMessage()`: Reject message
+  - `resign()`: Send email to owner and resign as moderator
+  - `inviteUser()`: Send email invitation to join forum
+  - `inviteModerator()`: Invite member to become moderator
+  - `inviteOwner()`: Invite member to take ownership
+  - `deleteForum()`: Remove forum entirely
   - `setModerator()`: Changes the forum moderator
   - `setOwner()`: Transfers ownership to another member
+  - `getModerator()`: Retrieves the forum moderator
+  - `getOwner()`: Retrieves the forum owner
+  - `getMembers()`: Retrieves list of members in forum
+  - `getThreads()`: Retrieves threads in forum
+
 
 ### Thread
 Represents a discussion thread containing related messages.
@@ -133,7 +202,9 @@ Represents a discussion thread containing related messages.
   - `forum`: The forum this thread belongs to
 - **Methods:**
   - `addMessage()`: Adds a message to the thread
+  - `getInitiatingMessage()`: Returns the first message in thread
   - `getMessages()`: Retrieves all messages in the thread
+  - `getSubject()`: Returns the subject of the thread
 
 ### Message
 Represents a single message posted by a user.
@@ -145,8 +216,29 @@ Represents a single message posted by a user.
   - `thread`: The thread this message belongs to
   - `isApproved`: Whether the moderator has approved this message
 - **Methods:**
+  - `getAuthor()`: Returns the user who posted the message
+  - `getContent()`: Returns the text content of the message
+  - `getTimestamp()`: Returns when the invitation was posted
+  - `getThread()`: Returns the associated thread
   - `approve()`: Marks the message as approved by moderator
   - `isApproved()`: Checks if message is approved
+ 
+### Invitation
+Represents an invitation sent between users related to a forum.
+- **Attributes:**
+  - `invitationId`: Unique identifier for the invitation
+  - `type`: Type of invitation
+  - `sender`: The user who sent the invitation
+  - `recipient`: The user who received the invitation
+  - `status`: Invitation status
+  - `forum`: The forum associated with the invitation
+- **Methods:**
+  - `accept()`: Accepts the invitation
+  - `reject()`: Rejects the invitation
+  - `getSender()`: Returns the sender
+  - `getRecipient()`: Returns the recipient
+  - `getStatus()`: Returns the invitation status
+  - `getForum()`: Returns the associated forum
 
 ## Data Structure Implementation Table
 
