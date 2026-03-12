@@ -5,8 +5,6 @@
 ```mermaid
 classDiagram
     class Website {
-        -ArrayList~Forum~ forums
-        -ArrayList~User~ registeredUsers
         +addForum(Forum f) void
         +addUser(User u) void
         +getForum(String forumId) Forum
@@ -18,9 +16,6 @@ classDiagram
         -String userId
         -String name
         -String email
-        -ArrayList~Forum~ joinedForums
-        -ArrayList~Invitation~ sentInvitations
-        -ArrayList~Invitation~ receivedInvitations
         +createForum(String name, String description) Forum
         +joinForum(Forum f) boolean
         +leaveForum(Forum f) boolean
@@ -38,10 +33,6 @@ classDiagram
         -String description
         -User owner
         -User moderator
-        -ArrayList~User~ members
-        -ArrayList~Thread~ threads
-        -ArrayList~Message~ pendingMessages
-        -ArrayList~Invitation~ pendingInvitations
         +addMember(User u) boolean
         +removeMember(User u) boolean
         +createThread(String subject, String content, User author) Thread
@@ -74,7 +65,6 @@ classDiagram
         -String threadId
         -String subject
         -Message initiatingMessage
-        -ArrayList~Message~ messages
         -Forum forum
         +addMessage(Message m) void
         +getInitiatingMessage() Message
